@@ -1,0 +1,29 @@
+# coding: utf-8
+# Import needed libraries
+
+import os
+import numpy as np
+import pandas as pd
+
+#Point to wd in which raw file is kept, store in var
+os.chdir(r'insert_working_directory_here')
+file = 'raw_file.csv'
+
+
+# read in to DataFrame
+df = pd.read_csv(file)
+
+# Create new column for financial week that is just the integer values and drop the FWN column
+# For final reporting, rename GS to PercGS
+df['FinancialWeek'] = df['Financial Week Name'].str.replace('week ', '', case=False)
+df.drop('Financial Week Name', axis=1, inplace=True)
+df.rename(index=str, columns={'Gross Sales': 'PercentofGrossSales'}, inplace=True)
+
+
+# Perform grouping and calculation; calculates the percent of total by Location, Fam Group, and Week
+df2 = df.groupby(['FinancialWeek','Location','Family Group']).agg({'PercentofGrossSales':'sum'})
+df2_pcts = df2.groupby(level=['FinancialWeek','Location']).apply(lambda x: 100 * x / float(x.sum()))
+
+# point to output directory and create the csv
+os.chdir(r'insert_output_directory_here')
+df2_pcts.to_csv('outputfilename.csv')
